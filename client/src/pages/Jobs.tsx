@@ -4,11 +4,10 @@ import axios from "axios";
 import { auth } from "../firebase";
 import { ArrowLeft, Briefcase, MapPin, DollarSign, Clock, Filter, Search, Sparkles } from "lucide-react";
 
-// Simple in-memory cache with TTL, keyed by query
-const jobCache = new Map();
-const CACHE_TTL_MS = 60 * 1000; // 1 minute
+const jobCache = new Map<string, { data: any[]; ts: number }>();
+const CACHE_TTL_MS = 60 * 1000;
 
-const getCacheEntry = (key) => {
+const getCacheEntry = (key: string) => {
   const entry = jobCache.get(key);
   if (!entry) return null;
   if (Date.now() - entry.ts > CACHE_TTL_MS) {
@@ -19,19 +18,18 @@ const getCacheEntry = (key) => {
 };
 
 export default function Jobs() {
-  const [jobs, setJobs] = useState([]);
-  const [matchedJobs, setMatchedJobs] = useState([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [matchedJobs, setMatchedJobs] = useState<any[]>([]);
   const [showMatched, setShowMatched] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchJobs();
   }, []);
 
-  // Debounced server-side search to leverage Adzuna filtering
   useEffect(() => {
     const handle = setTimeout(() => {
       fetchJobs(searchQuery.trim());
@@ -39,7 +37,7 @@ export default function Jobs() {
     return () => clearTimeout(handle);
   }, [searchQuery]);
 
-  const fetchJobs = async (query = "") => {
+  const fetchJobs = async (query: string = "") => {
     const cacheKey = query || "__all__";
     try {
       setLoading(true);
@@ -49,7 +47,6 @@ export default function Jobs() {
         return;
       }
 
-      // Fetch from our local API which aggregates DB + Adzuna
       const response = await axios.get("http://localhost:5001/api/jobs", {
         params: query ? { q: query } : {},
       });
@@ -57,35 +54,13 @@ export default function Jobs() {
       jobCache.set(cacheKey, { data: response.data, ts: Date.now() });
     } catch (error) {
       console.error("Error fetching jobs:", error);
-      // Fallback to mock data if API fails
-      setJobs([
-        {
-          id: 1,
-          title: "Senior Frontend Developer",
-          company: "TechCorp Inc",
-          location: "San Francisco, CA",
-          salary: "$120k - $160k",
-          description: "Join our team as a Senior Frontend Developer working with React and modern web technologies.",
-          skills: ["React", "TypeScript", "Tailwind CSS", "Node.js"],
-          postedAt: new Date().toISOString()
-        },
-        {
-          id: 2,
-          title: "Full Stack Engineer",
-          company: "StartupXYZ",
-          location: "Remote",
-          salary: "$100k - $140k",
-          description: "Build scalable web applications using modern tech stack.",
-          skills: ["JavaScript", "Python", "PostgreSQL", "Docker"],
-          postedAt: new Date().toISOString()
-        }
-      ]);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const openJob = (job) => setSelectedJob(job);
+  const openJob = (job: any) => setSelectedJob(job);
   const closeJob = () => setSelectedJob(null);
 
   const fetchMatchedJobs = async () => {
@@ -94,7 +69,6 @@ export default function Jobs() {
       if (!user) return;
 
       setLoading(true);
-      // Get user's resumes
       const resumesRes = await axios.get("http://localhost:5001/api/my-resumes", {
         headers: { "x-user-id": user.uid },
       });
@@ -107,17 +81,12 @@ export default function Jobs() {
         return;
       }
 
-      // Get the latest resume
       const latestResume = resumesRes.data[0];
-      
-      // Create a mock PDF from resume data
       const resumeContent = `Name: ${latestResume.name}\nEmail: ${latestResume.email}\nSkills: ${latestResume.skills.join(", ")}\nExperience: ${latestResume.experience}`;
       const blob = new Blob([resumeContent], { type: "application/pdf" });
-      
       const formData = new FormData();
       formData.append("file", blob, "resume.pdf");
 
-      // Match with ML service
       const matchRes = await axios.post("http://localhost:8000/match-resume", formData);
       setMatchedJobs(matchRes.data.matches || []);
       setShowMatched(true);
@@ -129,8 +98,8 @@ export default function Jobs() {
     }
   };
 
-  const displayJobs = showMatched ? matchedJobs : jobs;
-  const filteredJobs = displayJobs.filter(job => {
+  const displayJobs: any[] = showMatched ? matchedJobs : jobs;
+  const filteredJobs = displayJobs.filter((job: any) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const jobData = showMatched ? job.job : job;
@@ -138,28 +107,22 @@ export default function Jobs() {
       jobData?.title?.toLowerCase().includes(query) ||
       jobData?.company?.toLowerCase().includes(query) ||
       jobData?.location?.toLowerCase().includes(query) ||
-      jobData?.skills?.some(skill => skill.toLowerCase().includes(query))
+      jobData?.skills?.some((skill: string) => skill.toLowerCase().includes(query))
     );
   });
 
   return (
     <div className="min-h-screen bg-blue-50">
-      {/* Header */}
       <header className="bg-white shadow-md border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition"
-          >
+          <button onClick={() => navigate("/dashboard")} className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
             <ArrowLeft className="h-5 w-5" />
             <span className="font-medium">Back to Dashboard</span>
           </button>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-blue-600 mb-4 shadow-lg">
             <Briefcase className="h-8 w-8 text-white" />
@@ -172,10 +135,8 @@ export default function Jobs() {
           </p>
         </div>
 
-        {/* Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
               <input
@@ -187,7 +148,6 @@ export default function Jobs() {
               />
             </div>
 
-            {/* Toggle Matched Jobs */}
             <button
               onClick={() => {
                 if (showMatched) {
@@ -198,9 +158,7 @@ export default function Jobs() {
               }}
               disabled={loading}
               className={`px-6 py-3 rounded-full font-semibold transition flex items-center space-x-2 ${
-                showMatched
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                showMatched ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               } disabled:opacity-50`}
             >
               <Sparkles className="h-5 w-5" />
@@ -209,14 +167,12 @@ export default function Jobs() {
           </div>
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         )}
 
-        {/* Jobs Grid */}
         {!loading && (
           <div className="grid md:grid-cols-2 gap-6">
             {filteredJobs.length === 0 ? (
@@ -227,16 +183,12 @@ export default function Jobs() {
                 </p>
               </div>
             ) : (
-              filteredJobs.map((item, idx) => {
+              filteredJobs.map((item: any, idx: number) => {
                 const job = showMatched ? item.job : item;
                 const matchScore = showMatched ? item.similarity : null;
 
                 return (
-                  <div
-                    key={idx}
-                    className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 p-6 transform hover:-translate-y-1"
-                  >
-                    {/* Job Header */}
+                  <div key={idx} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 p-6 transform hover:-translate-y-1">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-900 mb-1">{job?.title}</h3>
@@ -250,7 +202,6 @@ export default function Jobs() {
                       )}
                     </div>
 
-                    {/* Job Details */}
                     <div className="space-y-2 mb-4">
                       {job?.location && (
                         <div className="flex items-center text-gray-600 text-sm">
@@ -264,36 +215,27 @@ export default function Jobs() {
                           {job.salary}
                         </div>
                       )}
-                      <div className="flex items-center text-gray-600 text-sm">
+                      <div className="flex items=center text-gray-600 text-sm">
                         <Clock className="h-4 w-4 mr-2" />
                         {job?.postedAt ? new Date(job.postedAt).toLocaleDateString() : "Recently posted"}
                       </div>
                     </div>
 
-                    {/* Description */}
                     {job?.description && (
                       <p className="text-gray-700 text-sm mb-4 line-clamp-3">{job.description}</p>
                     )}
 
-                    {/* Skills */}
                     {job?.skills && job.skills.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {job.skills.slice(0, 6).map((skill, sidx) => (
-                          <span
-                            key={sidx}
-                            className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
-                          >
+                        {job.skills.slice(0, 6).map((skill: string, sidx: number) => (
+                          <span key={sidx} className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
                             {skill}
                           </span>
                         ))}
                       </div>
                     )}
 
-                    {/* Apply Button */}
-                    <button
-                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full hover:shadow-lg transition"
-                      onClick={() => openJob(job)}
-                    >
+                    <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full hover:shadow-lg transition" onClick={() => openJob(job)}>
                       View Details
                     </button>
                   </div>
@@ -304,7 +246,6 @@ export default function Jobs() {
         )}
       </main>
 
-      {/* Job detail modal */}
       {selectedJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden">
@@ -312,17 +253,9 @@ export default function Jobs() {
               <div>
                 <p className="text-sm uppercase tracking-wide text-blue-600 font-semibold">Role</p>
                 <h2 className="text-2xl font-bold text-gray-900">{selectedJob.title}</h2>
-                {selectedJob.company && (
-                  <p className="text-gray-600 mt-1">{selectedJob.company}</p>
-                )}
+                {selectedJob.company && <p className="text-gray-600 mt-1">{selectedJob.company}</p>}
               </div>
-              <button
-                onClick={closeJob}
-                className="text-gray-400 hover:text-gray-600 transition"
-                aria-label="Close"
-              >
-                ✕
-              </button>
+              <button onClick={closeJob} className="text-gray-400 hover:text-gray-600 transition" aria-label="Close">✕</button>
             </div>
 
             <div className="p-6 space-y-4 overflow-y-auto max-h-[65vh]">
@@ -341,19 +274,14 @@ export default function Jobs() {
                 )}
                 <span className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full">
                   <Clock className="h-4 w-4" />
-                  {selectedJob.postedAt
-                    ? new Date(selectedJob.postedAt).toLocaleDateString()
-                    : "Recently posted"}
+                  {selectedJob.postedAt ? new Date(selectedJob.postedAt).toLocaleDateString() : "Recently posted"}
                 </span>
               </div>
 
               {selectedJob.skills && selectedJob.skills.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {selectedJob.skills.map((skill, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
-                    >
+                  {selectedJob.skills.map((skill: string, idx: number) => (
+                    <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
                       {skill}
                     </span>
                   ))}
@@ -366,21 +294,8 @@ export default function Jobs() {
             </div>
 
             <div className="flex items-center justify-between p-6 border-t border-gray-100">
-              <button
-                onClick={closeJob}
-                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => selectedJob.url && window.open(selectedJob.url, "_blank", "noopener,noreferrer")}
-                disabled={!selectedJob.url}
-                className={`px-5 py-2 rounded-lg font-semibold transition ${
-                  selectedJob.url
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                }`}
-              >
+              <button onClick={closeJob} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition">Close</button>
+              <button onClick={() => selectedJob.url && window.open(selectedJob.url, "_blank", "noopener,noreferrer")} disabled={!selectedJob.url} className={`px-5 py-2 rounded-lg font-semibold transition ${selectedJob.url ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}>
                 {selectedJob.url ? "Apply on site" : "No apply link"}
               </button>
             </div>

@@ -11,7 +11,7 @@ const ResumeUploader = () => {
     if (!file) return alert("Please select a file");
 
     const formData = new FormData();
-    formData.append("resume", file);
+    formData.append("resume", file as any);
 
     const auth = getAuth();
     const user = auth.currentUser;
@@ -43,7 +43,7 @@ const ResumeUploader = () => {
       <input
         type="file"
         accept=".pdf,.txt"
-        onChange={(e) => setFile(e.target.files[0])}
+        onChange={(e) => setFile((e.target as HTMLInputElement).files?.[0] || null)}
         className="block w-full p-2 border rounded"
       />
       <button

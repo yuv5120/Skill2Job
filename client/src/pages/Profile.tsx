@@ -5,13 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Mail, Phone, Lock, LogOut, Edit2, Save, X } from "lucide-react";
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
+  const [message, setMessage] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function Profile() {
     }
   };
 
-  const handleUpdateProfile = async (e) => {
+  const handleUpdateProfile = async (e: any) => {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
@@ -63,7 +63,7 @@ export default function Profile() {
 
       setMessage({ type: "success", text: "Profile updated successfully!" });
       setIsEditing(false);
-    } catch (error) {
+    } catch (error: any) {
       setMessage({ type: "error", text: error.message || "Failed to update profile" });
     } finally {
       setLoading(false);
@@ -80,31 +80,24 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-blue-50">
-      {/* Header */}
       <header className="bg-white shadow-md border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition"
-          >
+          <button onClick={() => navigate("/dashboard")} className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
             <ArrowLeft className="h-5 w-5" />
             <span className="font-medium">Back to Dashboard</span>
           </button>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-          {/* Profile Header */}
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow_hidden">
           <div className="bg-blue-600 h-32"></div>
           
           <div className="px-8 pb-8">
-            {/* Avatar */}
             <div className="flex items-end justify-between -mt-16 mb-6">
               <div className="flex items-end space-x-4">
-                <div className="h-32 w-32 rounded-2xl bg-white shadow-lg flex items-center justify-center border-4 border-white">
-                  <div className="h-28 w-28 rounded-xl bg-blue-600 flex items-center justify-center">
+                <div className="h-32 w-32 rounded-2xl bg-white shadow-lg flex items=center justify-center border-4 border-white">
+                  <div className="h-28 w-28 rounded-xl bg-blue-600 flex items=center justify=center">
                     <User className="h-14 w-14 text-white" />
                   </div>
                 </div>
@@ -115,28 +108,19 @@ export default function Profile() {
               </div>
               
               {!isEditing && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="mb-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition flex items-center space-x-2"
-                >
+                <button onClick={() => setIsEditing(true)} className="mb-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition flex items_center space-x-2">
                   <Edit2 className="h-4 w-4" />
                   <span>Edit Profile</span>
                 </button>
               )}
             </div>
 
-            {/* Message */}
             {message && (
-              <div className={`mb-6 p-4 rounded-xl ${
-                message.type === "success" 
-                  ? "bg-green-50 border border-green-200 text-green-800" 
-                  : "bg-red-50 border border-red-200 text-red-800"
-              }`}>
+              <div className={`mb-6 p-4 rounded-xl ${message.type === "success" ? "bg-green-50 border border-green-200 text-green-800" : "bg-red-50 border border-red-200 text-red-800"}`}>
                 {message.text}
               </div>
             )}
 
-            {/* Profile Details */}
             {!isEditing ? (
               <div className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
@@ -156,7 +140,7 @@ export default function Profile() {
                     <p className="text-lg font-semibold text-gray-900">{user.email}</p>
                   </div>
 
-                  <div className="p-4 bg-gray-50 rounded-xl">
+                  <div className="p-4 bg_gray-50 rounded-xl">
                     <div className="flex items-center space-x-3 mb-2">
                       <Phone className="h-5 w-5 text-pink-600" />
                       <p className="text-sm text-gray-500">Phone Number</p>
@@ -173,12 +157,8 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {/* Sign Out Button */}
                 <div className="pt-6 border-t border-gray-200">
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full py-3 bg-red-50 text-red-600 font-semibold rounded-full hover:bg-red-100 transition flex items-center justify-center space-x-2"
-                  >
+                  <button onClick={handleSignOut} className="w-full py-3 bg-red-50 text-red-600 font-semibold rounded-full hover:bg-red-100 transition flex items_center justify_center space-x-2">
                     <LogOut className="h-5 w-5" />
                     <span>Sign Out</span>
                   </button>
@@ -190,12 +170,7 @@ export default function Profile() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                   <div className="relative">
                     <User className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
 
@@ -203,13 +178,7 @@ export default function Profile() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">New Password (Optional)</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Leave blank to keep current"
-                      className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Leave blank to keep current" className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
 
@@ -218,37 +187,17 @@ export default function Profile() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Re-enter new password"
-                        className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                   </div>
                 )}
 
                 <div className="flex space-x-4">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full hover:shadow-lg transition disabled:opacity-50 flex items-center justify-center space-x-2"
-                  >
+                  <button type="submit" disabled={loading} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full hover:shadow-lg transition disabled:opacity-50 flex items_center justify_center space-x-2">
                     <Save className="h-5 w-5" />
                     <span>{loading ? "Saving..." : "Save Changes"}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setDisplayName(user.displayName || "");
-                      setNewPassword("");
-                      setConfirmPassword("");
-                      setMessage(null);
-                    }}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition flex items-center space-x-2"
-                  >
+                  <button type="button" onClick={() => { setIsEditing(false); setDisplayName(user.displayName || ""); setNewPassword(""); setConfirmPassword(""); setMessage(null); }} className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition flex items_center space-x-2">
                     <X className="h-5 w-5" />
                     <span>Cancel</span>
                   </button>

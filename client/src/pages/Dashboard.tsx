@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Upload, Briefcase, User, Mail, Clock, FileText, History, UserCircle, Settings } from "lucide-react";
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,8 +18,6 @@ export default function Dashboard() {
     return () => unsubscribe();
   }, [navigate]);
 
-
-
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-blue-50">
@@ -30,25 +28,19 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-blue-50">
-      {/* Header with Profile */}
       <header className="bg-white shadow-md border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg">
+                <div className="h-12 w-12 rounded-xl bg-blue-600 flex items=center justify-center shadow-lg">
                   <Briefcase className="h-6 w-6 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold text-blue-600">
-                  Skill2Job
-                </h1>
+                <h1 className="text-2xl font-bold text-blue-600">Skill2Job</h1>
               </div>
             </div>
             
-            <Link
-              to="/profile"
-              className="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-xl hover:bg-blue-50 transition-all duration-300 group"
-            >
+            <Link to="/profile" className="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-xl hover:bg-blue-50 transition-all duration-300 group">
               <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                 <User className="h-5 w-5 text-white" />
               </div>
@@ -61,9 +53,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
         <div className="mb-8 p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back, <span className="text-blue-600">{user.displayName || "there"}!</span>
@@ -71,24 +61,15 @@ export default function Dashboard() {
           <p className="text-gray-600">Start matching your resume with the perfect job opportunities</p>
         </div>
 
-        {/* Action Cards Grid */}
         <div className="grid md:grid-cols-2 gap-8 mb-8">
-          {/* Upload Resume Card */}
-          <Link
-            to="/resume/upload"
-            className="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-blue-200 transform hover:-translate-y-1"
-          >
+          <Link to="/resume/upload" className="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-blue-200 transform hover:-translate-y-1">
             <div className="flex items-start space-x-4">
               <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <Upload className="h-8 w-8 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">
-                  Upload Resume
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Upload your resume and get AI-powered job recommendations tailored to your skills and experience.
-                </p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">Upload Resume</h3>
+                <p className="text-gray-600 mb-4">Upload your resume and get AI-powered job recommendations tailored to your skills and experience.</p>
                 <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
                   Get Started
                   <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,22 +80,14 @@ export default function Dashboard() {
             </div>
           </Link>
 
-          {/* Browse Jobs Card */}
-          <Link
-            to="/jobs"
-            className="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-purple-200 transform hover:-translate-y-1"
-          >
+          <Link to="/jobs" className="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-purple-200 transform hover:-translate-y-1">
             <div className="flex items-start space-x-4">
               <div className="h-16 w-16 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <Briefcase className="h-8 w-8 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">
-                  Browse Jobs
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Explore available job opportunities and find positions that match your skills and experience.
-                </p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">Browse Jobs</h3>
+                <p className="text-gray-600 mb-4">Explore available job opportunities and find positions that match your skills and experience.</p>
                 <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
                   Explore Jobs
                   <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,17 +99,13 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        {/* Quick Links Section */}
         <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
           <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
             <History className="h-6 w-6 mr-2 text-blue-600" />
             Quick Links
           </h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link
-              to="/resume/history"
-              className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-blue-50 hover:shadow-md transition-all duration-300 group"
-            >
+            <Link to="/resume/history" className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-blue-50 hover:shadow-md transition-all duration-300 group">
               <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-600 transition">
                 <FileText className="h-5 w-5 text-blue-600 group-hover:text-white transition" />
               </div>
@@ -146,11 +115,8 @@ export default function Dashboard() {
               </div>
             </Link>
 
-            <Link
-              to="/admin"
-              className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:shadow-md transition-all duration-300 group"
-            >
-              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-600 transition">
+            <Link to="/admin" className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:shadow-md transition-all duration-300 group">
+              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify=center group-hover:bg-purple-600 transition">
                 <Settings className="h-5 w-5 text-purple-600 group-hover:text-white transition" />
               </div>
               <div>
@@ -160,7 +126,7 @@ export default function Dashboard() {
             </Link>
 
             <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-pink-50 hover:shadow-md transition-all duration-300 group cursor-pointer">
-              <div className="h-10 w-10 rounded-lg bg-pink-100 flex items-center justify-center group-hover:bg-pink-600 transition">
+              <div className="h-10 w-10 rounded-lg bg-pink-100 flex items-center justify=center group-hover:bg-pink-600 transition">
                 <Clock className="h-5 w-5 text-pink-600 group-hover:text-white transition" />
               </div>
               <div>

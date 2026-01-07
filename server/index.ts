@@ -1,15 +1,16 @@
-const express = require("express");
-const cors = require("cors");
-const multer = require("multer");
-const axios = require("axios");
-const FormData = require("form-data");
-const rateLimit = require("express-rate-limit");
-require("dotenv").config();
-const prisma = require("./prisma");
+import express from "express";
+import cors from "cors";
+import multer from "multer";
+import axios from "axios";
+import FormData from "form-data";
+import rateLimit from "express-rate-limit";
+import dotenv from "dotenv";
+import prisma from "./prisma";
+dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // parse JSON for all routes
+app.use(express.json());
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -17,7 +18,7 @@ const upload = multer({ storage });
 app.get("/", (req, res) => res.send("API running"));
 
 app.get("/api/my-resumes", async (req, res) => {
-  const userId = req.headers["x-user-id"];
+  const userId = req.headers["x-user-id"] as string | undefined;
   if (!userId) return res.status(401).send("Unauthorized");
 
   try {
@@ -26,16 +27,15 @@ app.get("/api/my-resumes", async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
     res.json(resumes);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Error fetching resumes:", err.message);
     res.status(500).send("Failed to fetch resumes");
   }
 });
 
-// Rate limiter to protect Adzuna API quota
 const jobsLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // max requests per minute for this route
+  windowMs: 60 * 1000,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -47,14 +47,18 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
     });
     const dbJobsWithUrl = dbJobs.map((job) => ({ ...job, url: null }));
 
-    // External jobs via Adzuna (India only)
-    const { q, location, page = 1, country = "in" } = req.query;
-    let externalJobs = [];
+    const { q, location, page = 1, country = "in" } = req.query as {
+      q?: string;
+      location?: string;
+      page?: string | number;
+      country?: string;
+    };
+    let externalJobs: any[] = [];
     const appId = process.env.ADZUNA_APP_ID;
     const appKey = process.env.ADZUNA_API_KEY;
 
     if (appId && appKey) {
-      const params = {
+      const params: Record<string, any> = {
         app_id: appId,
         app_key: appKey,
         results_per_page: 20,
@@ -65,8 +69,8 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
       try {
         const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${page}`;
         const { data } = await axios.get(url, { params });
-        const results = Array.isArray(data?.results) ? data.results : [];
-        externalJobs = results.map((r) => ({
+        const results = Array.isArray((data as any)?.results) ? (data as any).results : [];
+        externalJobs = results.map((r: any) => ({
           id: `adz_${r.id}`,
           title: r.title,
           company: r.company?.display_name || null,
@@ -80,15 +84,14 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
           postedAt: r.created,
           url: r.redirect_url || null,
         }));
-      } catch (e) {
+      } catch (e: any) {
         console.error("Adzuna fetch failed:", e.message);
       }
     } else {
-      // Fallback to Remotive when Adzuna credentials missing
       try {
         const { data } = await axios.get("https://remotive.com/api/remote-jobs");
-        const jobs = Array.isArray(data?.jobs) ? data.jobs : [];
-        externalJobs = jobs.map((j) => ({
+        const jobs = Array.isArray((data as any)?.jobs) ? (data as any).jobs : [];
+        externalJobs = jobs.map((j: any) => ({
           id: `ext_${j.id}`,
           title: j.title,
           company: j.company_name,
@@ -97,15 +100,15 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
           description: j.description || "",
           skills: Array.isArray(j.tags) ? j.tags : [],
           postedAt: j.publication_date,
-          url: j.url || j.job_url || null,
+          url: (j as any).url || (j as any).job_url || null,
         }));
-      } catch (e) {
+      } catch (e: any) {
         console.error("External jobs fetch failed:", e.message);
       }
     }
 
     res.json([...externalJobs, ...dbJobsWithUrl]);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Get jobs error:", err);
     res.status(500).send("Error fetching jobs");
   }
@@ -113,7 +116,7 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
 
 app.post("/api/upload-resume", upload.single("resume"), async (req, res) => {
   const file = req.file;
-  const userId = req.headers["x-user-id"];
+  const userId = req.headers["x-user-id"] as string | undefined;
   if (!file) return res.status(400).send("No file uploaded");
   if (!userId) return res.status(401).send("Unauthorized");
 
@@ -128,36 +131,35 @@ app.post("/api/upload-resume", upload.single("resume"), async (req, res) => {
       headers: form.getHeaders(),
     });
 
-    const { name, email, skills, experience } = response.data;
+    const { name, email, skills, experience } = (response as any).data;
 
-const cleanText = (text) =>
-  typeof text === "string" ? text.replace(/\x00/g, "").trim() : "";
+    const cleanText = (text: any) =>
+      typeof text === "string" ? text.replace(/\x00/g, "").trim() : "";
 
-const cleanArray = (arr) =>
-  Array.isArray(arr) ? arr.map((s) => cleanText(s)) : [];
+    const cleanArray = (arr: any) => (Array.isArray(arr) ? arr.map((s) => cleanText(s)) : []);
 
-const saved = await prisma.resume.create({
-  data: {
-    userId,
-    name: cleanText(name),
-    email: cleanText(email),
-    skills: cleanArray(skills),
-    experience: cleanText(experience),
-  },
-});
+    const saved = await prisma.resume.create({
+      data: {
+        userId,
+        name: cleanText(name),
+        email: cleanText(email),
+        skills: cleanArray(skills),
+        experience: cleanText(experience),
+      },
+    });
 
     res.json(saved);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Parsing error:", err.message);
     res.status(500).send("Error parsing resume");
   }
 });
 
 app.post("/api/jobs", async (req, res) => {
-  const userId = req.headers["x-user-id"];
+  const userId = req.headers["x-user-id"] as string | undefined;
   if (!userId) return res.status(401).send("Unauthorized");
 
-  const { title, description, skills } = req.body;
+  const { title, description, skills } = req.body as any;
 
   try {
     const job = await prisma.job.create({
@@ -169,36 +171,39 @@ app.post("/api/jobs", async (req, res) => {
       },
     });
     res.json(job);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Create job error:", err);
     res.status(500).send("Error creating job");
   }
 });
+
 app.post("/api/save-matches", express.json(), async (req, res) => {
-  const { resumeId, matches } = req.body;
+  const { resumeId, matches } = req.body as any;
 
   try {
+    const prismaAny = prisma as any;
     const saved = await prisma.$transaction(
-      matches.map((match) =>
-        prisma.match.create({
+      (matches as any[]).map((match) =>
+        prismaAny.match.create({
           data: {
             resumeId,
-            jobId: match.jobId,
-            score: match.score,
+            jobId: (match as any).jobId,
+            score: (match as any).score,
           },
         })
       )
     );
 
     res.json({ success: true, saved });
-  } catch (err) {
-    console.error("Save match error:", err.message);
+  } catch (err: any) {
+    console.error("Save match error:", (err as any).message);
     res.status(500).send("Failed to save matches");
   }
 });
+
 app.delete("/api/resume/:id", async (req, res) => {
   const resumeId = req.params.id;
-  const userId = req.headers["x-user-id"];
+  const userId = req.headers["x-user-id"] as string | undefined;
 
   if (!userId) return res.status(401).send("Unauthorized");
 
@@ -209,7 +214,7 @@ app.delete("/api/resume/:id", async (req, res) => {
       },
     });
     res.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Delete resume error:", err);
     res.status(500).send("Error deleting resume");
   }

@@ -23,7 +23,6 @@ function App() {
         <Route path="/resume/matcher" element={<ResumeMatcher />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/admin" element={<Admin />} />
-        {/* Legacy routes for backward compatibility */}
         <Route path="/upload-resume" element={<ResumeUpload />} />
         <Route path="/resume-history" element={<ResumeHistory />} />
       </Routes>
@@ -32,4 +31,3 @@ function App() {
 }
 
 export default App;
-

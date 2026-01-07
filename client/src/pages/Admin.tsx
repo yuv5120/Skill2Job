@@ -14,8 +14,8 @@ export default function Admin() {
     skills: "",
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
-  const [postedJobs, setPostedJobs] = useState([]);
+  const [message, setMessage] = useState<any>(null);
+  const [postedJobs, setPostedJobs] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,11 +31,11 @@ export default function Admin() {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     
     const user = auth.currentUser;
@@ -44,7 +44,6 @@ export default function Admin() {
       return;
     }
 
-    // Validate form
     if (!formData.title || !formData.company || !formData.description) {
       setMessage({ type: "error", text: "Please fill in all required fields" });
       return;
@@ -69,8 +68,6 @@ export default function Admin() {
       );
 
       setMessage({ type: "success", text: "Job posted successfully!" });
-      
-      // Reset form
       setFormData({
         title: "",
         company: "",
@@ -79,10 +76,8 @@ export default function Admin() {
         description: "",
         skills: "",
       });
-
-      // Refresh job list
       fetchPostedJobs();
-    } catch (error) {
+    } catch (error: any) {
       setMessage({ 
         type: "error", 
         text: error.response?.data?.error || "Failed to post job" 
@@ -122,7 +117,6 @@ export default function Admin() {
               <p className="text-gray-600">Fill in the details below</p>
             </div>
 
-            {/* Message */}
             {message && (
               <div className={`mb-6 p-4 rounded-xl ${
                 message.type === "success" 
@@ -133,7 +127,6 @@ export default function Admin() {
               </div>
             )}
 
-            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -173,7 +166,7 @@ export default function Admin() {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text sm font-medium text-gray-700 mb-2">
                     Location
                   </label>
                   <div className="relative">
@@ -218,7 +211,7 @@ export default function Admin() {
                     value={formData.description}
                     onChange={handleChange}
                     placeholder="Describe the role, responsibilities, and requirements..."
-                    rows="4"
+                    rows={4}
                     className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -265,7 +258,7 @@ export default function Admin() {
                   <p className="text-gray-500">No jobs posted yet</p>
                 </div>
               ) : (
-                postedJobs.map((job, idx) => (
+                postedJobs.map((job: any, idx: number) => (
                   <div
                     key={idx}
                     className="p-4 border border-gray-200 rounded-xl hover:shadow-md transition"
@@ -280,7 +273,7 @@ export default function Admin() {
                     )}
                     {job.skills && job.skills.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {job.skills.slice(0, 4).map((skill, sidx) => (
+                        {job.skills.slice(0, 4).map((skill: string, sidx: number) => (
                           <span
                             key={sidx}
                             className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md"

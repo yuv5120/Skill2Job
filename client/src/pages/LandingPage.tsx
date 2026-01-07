@@ -12,18 +12,8 @@ export default function LandingPage() {
           Upload your resume, explore job opportunities, and let smart matching do the rest.
         </p>
         <div className="flex justify-center gap-6">
-          <button
-            onClick={() => navigate("/login")}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-          >
-            Login
-          </button>
-          <button
-            onClick={() => navigate("/register")}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-          >
-            Sign Up
-          </button>
+          <button onClick={() => navigate("/login")} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Login</button>
+          <button onClick={() => navigate("/register")} className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">Sign Up</button>
         </div>
       </div>
     </div>

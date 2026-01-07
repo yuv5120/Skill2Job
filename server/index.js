@@ -3,6 +3,8 @@ const cors = require("cors");
 const multer = require("multer");
 const axios = require("axios");
 const FormData = require("form-data");
+const rateLimit = require("express-rate-limit");
+require("dotenv").config();
 const prisma = require("./prisma");
 
 const app = express();
@@ -30,12 +32,79 @@ app.get("/api/my-resumes", async (req, res) => {
   }
 });
 
-app.get("/api/jobs", async (req, res) => {
+// Rate limiter to protect Adzuna API quota
+const jobsLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // max requests per minute for this route
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.get("/api/jobs", jobsLimiter, async (req, res) => {
   try {
-    const jobs = await prisma.job.findMany({
+    const dbJobs = await prisma.job.findMany({
       orderBy: { createdAt: "desc" },
     });
-    res.json(jobs);
+    const dbJobsWithUrl = dbJobs.map((job) => ({ ...job, url: null }));
+
+    // External jobs via Adzuna
+    const { q, location, page = 1, country = "us" } = req.query;
+    let externalJobs = [];
+    const appId = process.env.ADZUNA_APP_ID;
+    const appKey = process.env.ADZUNA_API_KEY;
+
+    if (appId && appKey) {
+      const params = {
+        app_id: appId,
+        app_key: appKey,
+        results_per_page: 20,
+      };
+      if (q) params.what = q;
+      if (location) params.where = location;
+
+      try {
+        const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${page}`;
+        const { data } = await axios.get(url, { params });
+        const results = Array.isArray(data?.results) ? data.results : [];
+        externalJobs = results.map((r) => ({
+          id: `adz_${r.id}`,
+          title: r.title,
+          company: r.company?.display_name || null,
+          location: r.location?.display_name || null,
+          salary:
+            r.salary_min && r.salary_max
+              ? `$${Math.round(r.salary_min)} - $${Math.round(r.salary_max)}`
+              : null,
+          description: r.description || "",
+          skills: [],
+          postedAt: r.created,
+          url: r.redirect_url || null,
+        }));
+      } catch (e) {
+        console.error("Adzuna fetch failed:", e.message);
+      }
+    } else {
+      // Fallback to Remotive when Adzuna credentials missing
+      try {
+        const { data } = await axios.get("https://remotive.com/api/remote-jobs");
+        const jobs = Array.isArray(data?.jobs) ? data.jobs : [];
+        externalJobs = jobs.map((j) => ({
+          id: `ext_${j.id}`,
+          title: j.title,
+          company: j.company_name,
+          location: j.candidate_required_location,
+          salary: j.salary || null,
+          description: j.description || "",
+          skills: Array.isArray(j.tags) ? j.tags : [],
+          postedAt: j.publication_date,
+          url: j.url || j.job_url || null,
+        }));
+      } catch (e) {
+        console.error("External jobs fetch failed:", e.message);
+      }
+    }
+
+    res.json([...externalJobs, ...dbJobsWithUrl]);
   } catch (err) {
     console.error("Get jobs error:", err);
     res.status(500).send("Error fetching jobs");

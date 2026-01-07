@@ -1,112 +1,176 @@
-
-import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useState, useEffect } from "react";
 import { auth } from "../firebase";
-import { useNavigate } from "react-router-dom";
-import JobForm from "../components/JobForm";
-import JobCard from "../components/JobCard";
-import ResumeUploader from "../components/ResumeUploader";
-import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import { Upload, Briefcase, User, Mail, Clock, FileText, History, UserCircle, Settings } from "lucide-react";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
-  const [jobs, setJobs] = useState([]);
-  const [showForm, setShowForm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      if (!u) {
-        navigate("/login");
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
       } else {
-        setUser(u);
-        try {
-          const res = await axios.get("http://localhost:5001/api/jobs");
-          setJobs(res.data);
-        } catch (err) {
-          console.error("Failed to fetch jobs", err);
-        }
+        navigate("/login");
       }
     });
-    return () => unsub();
+    return () => unsubscribe();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/login");
-  };
 
-  const addJob = async (jobData) => {
-    try {
-      const res = await axios.post("http://localhost:5001/api/jobs", jobData, {
-        headers: {
-          "x-user-id": user.uid,
-        },
-      });
-      setJobs([res.data, ...jobs]);
-      setShowForm(false);
-    } catch (err) {
-      alert("Failed to post job");
-      console.error(err);
-    }
-  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-blue-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 px-4 py-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-indigo-700">Dashboard</h1>
-        <button
-  onClick={() => navigate("/resume-history")}
-  className="bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-900"
->
-  Resume History
-</button>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
-        >
-          Logout
-        </button>
-
-      </div>
-
-      {/* Card Layout: Resume Upload & Post Job */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Resume Upload Card */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-xl font-semibold text-indigo-600 mb-4">Upload Resume</h2>
-          <ResumeUploader />
-        </div>
-
-        {/* Job Post Card */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-indigo-600">Post a Job</h2>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+    <div className="min-h-screen bg-blue-50">
+      {/* Header with Profile */}
+      <header className="bg-white shadow-md border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg">
+                  <Briefcase className="h-6 w-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold text-blue-600">
+                  Skill2Job
+                </h1>
+              </div>
+            </div>
+            
+            <Link
+              to="/profile"
+              className="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-xl hover:bg-blue-50 transition-all duration-300 group"
             >
-              {showForm ? "Close" : "+ Post Job"}
-            </button>
+              <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-left hidden md:block">
+                <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition">{user.displayName || "User"}</p>
+                <p className="text-xs text-gray-500">View Profile</p>
+              </div>
+            </Link>
           </div>
-          {showForm && <JobForm onSubmit={addJob} onCancel={() => setShowForm(false)} />}
         </div>
-      </div>
+      </header>
 
-      {/* Job Listings */}
-      <div className="bg-white p-6 mt-8 rounded-xl shadow-md">
-        <h2 className="text-xl font-semibold text-indigo-600 mb-4">All Posted Jobs</h2>
-        {jobs.length === 0 ? (
-          <p className="text-gray-500">No jobs posted yet.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {jobs.map((job, i) => (
-              <JobCard key={i} job={job} />
-            ))}
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8 p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, <span className="text-blue-600">{user.displayName || "there"}!</span>
+          </h2>
+          <p className="text-gray-600">Start matching your resume with the perfect job opportunities</p>
+        </div>
+
+        {/* Action Cards Grid */}
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          {/* Upload Resume Card */}
+          <Link
+            to="/resume/upload"
+            className="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-blue-200 transform hover:-translate-y-1"
+          >
+            <div className="flex items-start space-x-4">
+              <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <Upload className="h-8 w-8 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">
+                  Upload Resume
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Upload your resume and get AI-powered job recommendations tailored to your skills and experience.
+                </p>
+                <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
+                  Get Started
+                  <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Browse Jobs Card */}
+          <Link
+            to="/jobs"
+            className="group block p-8 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-purple-200 transform hover:-translate-y-1"
+          >
+            <div className="flex items-start space-x-4">
+              <div className="h-16 w-16 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <Briefcase className="h-8 w-8 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">
+                  Browse Jobs
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Explore available job opportunities and find positions that match your skills and experience.
+                </p>
+                <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
+                  Explore Jobs
+                  <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Quick Links Section */}
+        <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <History className="h-6 w-6 mr-2 text-blue-600" />
+            Quick Links
+          </h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Link
+              to="/resume/history"
+              className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-blue-50 hover:shadow-md transition-all duration-300 group"
+            >
+              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-600 transition">
+                <FileText className="h-5 w-5 text-blue-600 group-hover:text-white transition" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition">Resume History</p>
+                <p className="text-xs text-gray-500">View all uploads</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/admin"
+              className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-purple-50 hover:shadow-md transition-all duration-300 group"
+            >
+              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center group-hover:bg-purple-600 transition">
+                <Settings className="h-5 w-5 text-purple-600 group-hover:text-white transition" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 group-hover:text-purple-600 transition">Admin Panel</p>
+                <p className="text-xs text-gray-500">Post new jobs</p>
+              </div>
+            </Link>
+
+            <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl hover:bg-pink-50 hover:shadow-md transition-all duration-300 group cursor-pointer">
+              <div className="h-10 w-10 rounded-lg bg-pink-100 flex items-center justify-center group-hover:bg-pink-600 transition">
+                <Clock className="h-5 w-5 text-pink-600 group-hover:text-white transition" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 group-hover:text-pink-600 transition">Recent Activity</p>
+                <p className="text-xs text-gray-500">Last 7 days</p>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

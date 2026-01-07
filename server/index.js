@@ -47,8 +47,8 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
     });
     const dbJobsWithUrl = dbJobs.map((job) => ({ ...job, url: null }));
 
-    // External jobs via Adzuna
-    const { q, location, page = 1, country = "us" } = req.query;
+    // External jobs via Adzuna (India only)
+    const { q, location, page = 1, country = "in" } = req.query;
     let externalJobs = [];
     const appId = process.env.ADZUNA_APP_ID;
     const appKey = process.env.ADZUNA_API_KEY;

@@ -1,15 +1,16 @@
-// pages/ResumeHistory.jsx
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, FileText, Calendar, Briefcase, Sparkles, Loader } from "lucide-react";
 
 export default function ResumeHistory() {
   const [resumes, setResumes] = useState([]);
   const [user, setUser] = useState(null);
   const [matches, setMatches] = useState({});
   const [loadingMatch, setLoadingMatch] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     onAuthStateChanged(auth, async (u) => {
@@ -34,7 +35,6 @@ export default function ResumeHistory() {
     try {
       setLoadingMatch(resumeId);
 
-      // Create a mock PDF from skills + description (for now)
       const fakePDF = new Blob(
         [
           `Name: ${resume.name}\nEmail: ${resume.email}\nSkills: ${resume.skills.join(
@@ -48,68 +48,155 @@ export default function ResumeHistory() {
       formData.append("file", fakePDF, "resume.pdf");
 
       const res = await axios.post("http://localhost:8000/match-resume", formData);
-      setMatches((prev) => ({ ...prev, [resumeId]: res.data.matches }));
+      setMatches({ ...matches, [resumeId]: res.data });
     } catch (err) {
-      console.error("Match error:", err);
+      console.error("Error matching resume", err);
+      alert("Failed to match resume");
     } finally {
       setLoadingMatch(null);
     }
-    const handleDelete = async (resumeId) => {
-  if (!window.confirm("Are you sure you want to delete this resume?")) return;
-
-  try {
-    await axios.delete(`http://localhost:5001/api/resume/${resumeId}`, {
-      headers: { "x-user-id": user.uid },
-    });
-    setResumes(resumes.filter((r) => r.id !== resumeId));
-  } catch (err) {
-    console.error("Failed to delete resume", err);
-    alert("Error deleting resume");
-  }
-};
-
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Resume History & Matches</h2>
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        {resumes.map((resume) => (
-          <div key={resume.id} className="bg-white p-4 rounded shadow">
-            <p><strong>Name:</strong> {resume.name}</p>
-            <p><strong>Email:</strong> {resume.email}</p>
-            <p><strong>Skills:</strong> {resume.skills.join(", ")}</p>
-            <p><strong>Experience:</strong> {resume.experience}</p>
+    <div className="min-h-screen bg-blue-50">
+      {/* Header */}
+      <header className="bg-white shadow-md border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="font-medium">Back to Dashboard</span>
+          </button>
+        </div>
+      </header>
 
-            <button
-              onClick={() => handleMatch(resume.id)}
-              className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-            >
-              {loadingMatch === resume.id ? "Matching..." : "Match Jobs"}
-            </button>
-            <button
-  onClick={() => handleDelete(resume.id)}
-  className="mt-2 px-4 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm"
->
-  Delete
-</button>
-
-
-            {matches[resume.id] && (
-              <div className="mt-4">
-                <h4 className="font-semibold">Top Matches:</h4>
-                <ul className="list-disc list-inside text-sm text-gray-700">
-                  {matches[resume.id].map((m, i) => (
-                    <li key={i}>
-                      <strong>{m.job.title}</strong> ({m.score * 100}% match)
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Title */}
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-blue-600 mb-4 shadow-lg">
+            <FileText className="h-8 w-8 text-white" />
           </div>
-        ))}
-      </div>
+          <h1 className="text-3xl font-bold text-blue-600 mb-2">
+            Resume History
+          </h1>
+          <p className="text-gray-600">View and manage all your uploaded resumes</p>
+        </div>
+
+        {/* Resumes Grid */}
+        {resumes.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl shadow-lg border border-gray-100">
+            <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg font-medium">No resumes uploaded yet</p>
+            <button
+              onClick={() => navigate("/resume/upload")}
+              className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg transition"
+            >
+              Upload Your First Resume
+            </button>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {resumes.map((resume) => (
+              <div
+                key={resume.id}
+                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 p-6 transform hover:-translate-y-1"
+              >
+                {/* Resume Icon */}
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                    <FileText className="h-7 w-7 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 text-lg truncate">{resume.name}</h3>
+                    <p className="text-sm text-gray-500 truncate">{resume.email}</p>
+                  </div>
+                </div>
+
+                {/* Resume Details */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-start space-x-2">
+                    <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1" />
+                    <div>
+                      <p className="text-xs text-gray-500">Uploaded</p>
+                      <p className="text-sm text-gray-700">
+                        {new Date(resume.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start space-x-2">
+                    <Sparkles className="h-4 w-4 text-gray-400 flex-shrink-0 mt-1" />
+                    <div>
+                      <p className="text-xs text-gray-500">Skills</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {resume.skills.slice(0, 3).map((skill, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md font-medium"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {resume.skills.length > 3 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md font-medium">
+                            +{resume.skills.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Match Button */}
+                <button
+                  onClick={() => handleMatch(resume.id)}
+                  disabled={loadingMatch === resume.id}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {loadingMatch === resume.id ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin" />
+                      <span>Matching...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Briefcase className="h-5 w-5" />
+                      <span>Find Jobs</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Match Results */}
+                {matches[resume.id] && (
+                  <div className="mt-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                    <h4 className="font-bold text-green-900 mb-2 text-sm">Matched Jobs:</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {matches[resume.id].matches?.map((match, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 bg-white rounded-lg shadow-sm border border-green-100"
+                        >
+                          <p className="font-semibold text-gray-900 text-sm">{match.job?.title}</p>
+                          <p className="text-xs text-gray-500 mt-1">{match.job?.company}</p>
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="text-xs font-medium text-green-700">
+                              Match: {(match.similarity * 100).toFixed(1)}%
+                            </span>
+                            <span className="text-xs text-gray-500">{match.job?.location}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 }

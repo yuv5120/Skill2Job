@@ -1,14 +1,26 @@
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 import spacy
 import fitz  # PyMuPDF
 import requests
 import hashlib
 import redis
 import re
+import json
 
 # Initialize Redis and SpaCy
 r = redis.Redis(host="localhost", port=6379, decode_responses=True)
 app = FastAPI()
+
+# Enable CORS for local dev client
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_credentials=True,
+    allow_methods=["*"]
+    ,
+    allow_headers=["*"]
+)
 nlp = spacy.load("en_core_web_md")
 
 
@@ -26,7 +38,11 @@ async def parse_resume(file: UploadFile = File(...)):
     file_hash = hashlib.md5(contents).hexdigest()
 
     if r.exists(file_hash):
-        return eval(r.get(file_hash))
+        try:
+            return json.loads(r.get(file_hash))
+        except Exception:
+            # Fallback if cache is corrupted
+            r.delete(file_hash)
 
     try:
         doc = fitz.open(stream=contents, filetype="pdf")
@@ -97,7 +113,7 @@ async def parse_resume(file: UploadFile = File(...)):
             "experience": experience,
         }
 
-        r.set(file_hash, str(result), ex=86400)
+        r.set(file_hash, json.dumps(result), ex=86400)
         return result
 
     except Exception as e:
@@ -119,17 +135,24 @@ async def match_resume(file: UploadFile = File(...)):
 
         scored = []
         for job in jobs:
-            job_text = f"{job['title']} {job['description']} " \
-                       f"{' '.join(job['skills']) if isinstance(job['skills'], list) else job['skills']}"
+            title = job.get('title', '')
+            description = job.get('description', '')
+            skills_list = job.get('skills', [])
+            if isinstance(skills_list, list):
+                skills_str = ' '.join(skills_list)
+            else:
+                skills_str = str(skills_list or '')
+            job_text = f"{title} {description} {skills_str}"
             job_doc = nlp(job_text)
             similarity = resume_doc.similarity(job_doc)
             scored.append((job, similarity))
-        scored = [(job, score) for job, score in scored if score > 0.6]
+        # Allow more results by using a slightly lower threshold
+        scored = [(job, score) for job, score in scored if score > 0.4]
         top_matches = sorted(scored, key=lambda x: x[1], reverse=True)[:5]
 
         return {
             "matches": [
-                {"job": job, "score": round(score, 2)} for job, score in top_matches
+                {"job": job, "similarity": round(score, 2)} for job, score in top_matches
             ]
         }
 

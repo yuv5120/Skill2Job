@@ -64,6 +64,9 @@ jobs:
       
       - name: Generate Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
       
       - name: Run migrations
         run: npx prisma migrate deploy

@@ -1,0 +1,40 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Weekly on Monday
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Check for dependency updates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Check client updates
+        working-directory: ./client
+        run: |
+          npm outdated || true
+      
+      - name: Check server updates
+        working-directory: ./server
+        run: |
+          npm outdated || true
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Check ML service updates
+        working-directory: ./ml-service
+        run: |
+          pip install pip-check
+          pip-check || true

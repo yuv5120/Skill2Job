@@ -7,9 +7,19 @@ import hashlib
 import redis
 import re
 import json
+import os
 
 # Initialize Redis and SpaCy
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+try:
+    r = redis.from_url(redis_url, decode_responses=True)
+    r.ping()  # Test connection
+    REDIS_AVAILABLE = True
+except Exception as e:
+    print(f"Redis connection failed: {e}. Running without cache.")
+    REDIS_AVAILABLE = False
+    r = None
+
 app = FastAPI()
 
 # Enable CORS for local dev client
@@ -37,12 +47,18 @@ async def parse_resume(file: UploadFile = File(...)):
     contents = await file.read()
     file_hash = hashlib.md5(contents).hexdigest()
 
-    if r.exists(file_hash):
+    # Check cache if Redis is available
+    if REDIS_AVAILABLE and r:
         try:
-            return json.loads(r.get(file_hash))
+            cached = r.get(file_hash)
+            if cached:
+                return json.loads(cached)
         except Exception:
             # Fallback if cache is corrupted
-            r.delete(file_hash)
+            try:
+                r.delete(file_hash)
+            except:
+                pass
 
     try:
         doc = fitz.open(stream=contents, filetype="pdf")
@@ -113,7 +129,13 @@ async def parse_resume(file: UploadFile = File(...)):
             "experience": experience,
         }
 
-        r.set(file_hash, json.dumps(result), ex=86400)
+        # Cache result if Redis is available
+        if REDIS_AVAILABLE and r:
+            try:
+                r.set(file_hash, json.dumps(result), ex=86400)
+            except Exception as e:
+                print(f"Failed to cache result: {e}")
+        
         return result
 
     except Exception as e:

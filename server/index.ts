@@ -42,9 +42,20 @@ const jobsLimiter = rateLimit({
 
 app.get("/api/jobs", jobsLimiter, async (req, res) => {
   try {
-    const dbJobs = await prisma.job.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    console.log("Fetching jobs...");
+    
+    // Fetch database jobs
+    let dbJobs: any[] = [];
+    try {
+      dbJobs = await prisma.job.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+      console.log(`Found ${dbJobs.length} jobs in database`);
+    } catch (dbErr: any) {
+      console.error("Database fetch failed:", dbErr.message);
+      // Continue even if DB fails
+    }
+    
     const dbJobsWithUrl = dbJobs.map((job) => ({ ...job, url: null }));
 
     const { q, location, page = 1, country = "in" } = req.query as {
@@ -53,9 +64,12 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
       page?: string | number;
       country?: string;
     };
+    
     let externalJobs: any[] = [];
     const appId = process.env.ADZUNA_APP_ID;
     const appKey = process.env.ADZUNA_API_KEY;
+
+    console.log("Adzuna API configured:", !!appId && !!appKey);
 
     if (appId && appKey) {
       const params: Record<string, any> = {
@@ -68,8 +82,10 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
 
       try {
         const url = `https://api.adzuna.com/v1/api/jobs/${country}/search/${page}`;
+        console.log("Fetching from Adzuna:", url);
         const { data } = await axios.get(url, { params });
         const results = Array.isArray((data as any)?.results) ? (data as any).results : [];
+        console.log(`Adzuna returned ${results.length} jobs`);
         externalJobs = results.map((r: any) => ({
           id: `adz_${r.id}`,
           title: r.title,
@@ -86,11 +102,16 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
         }));
       } catch (e: any) {
         console.error("Adzuna fetch failed:", e.message);
+        if (e.response) {
+          console.error("Adzuna error response:", e.response.status, e.response.data);
+        }
       }
     } else {
+      console.log("Falling back to Remotive API");
       try {
         const { data } = await axios.get("https://remotive.com/api/remote-jobs");
         const jobs = Array.isArray((data as any)?.jobs) ? (data as any).jobs : [];
+        console.log(`Remotive returned ${jobs.length} jobs`);
         externalJobs = jobs.map((j: any) => ({
           id: `ext_${j.id}`,
           title: j.title,
@@ -107,10 +128,12 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
       }
     }
 
-    res.json([...externalJobs, ...dbJobsWithUrl]);
+    const allJobs = [...externalJobs, ...dbJobsWithUrl];
+    console.log(`Returning total ${allJobs.length} jobs`);
+    res.json(allJobs);
   } catch (err: any) {
     console.error("Get jobs error:", err);
-    res.status(500).send("Error fetching jobs");
+    res.status(500).json({ error: "Error fetching jobs", message: err.message });
   }
 });
 
@@ -121,13 +144,14 @@ app.post("/api/upload-resume", upload.single("resume"), async (req, res) => {
   if (!userId) return res.status(401).send("Unauthorized");
 
   try {
+    const mlServiceUrl = process.env.ML_SERVICE_URL || "http://localhost:8000";
     const form = new FormData();
     form.append("file", file.buffer, {
       filename: file.originalname,
       contentType: file.mimetype,
     });
 
-    const response = await axios.post("http://localhost:8000/parse-resume", form, {
+    const response = await axios.post(`${mlServiceUrl}/parse-resume`, form, {
       headers: form.getHeaders(),
     });
 

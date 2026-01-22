@@ -124,9 +124,22 @@ async def match_resume(file: UploadFile = File(...)):
     contents = await file.read()
 
     try:
-        # Extract resume text
-        doc = fitz.open(stream=contents, filetype="pdf")
-        text = "".join([page.get_text() for page in doc])
+        # Extract resume text - try PDF first, then plain text
+        text = ""
+        try:
+            doc = fitz.open(stream=contents, filetype="pdf")
+            text = "".join([page.get_text() for page in doc])
+        except:
+            # If PDF parsing failed, treat as plain text
+            pass
+        
+        # If no text from PDF, try reading as plain text
+        if not text or len(text.strip()) < 10:
+            text = contents.decode('utf-8', errors='ignore')
+        
+        if not text or len(text.strip()) < 10:
+            return {"error": "Could not extract text from file", "matches": []}
+        
         resume_doc = nlp(text)
 
         # Fetch jobs
@@ -157,4 +170,4 @@ async def match_resume(file: UploadFile = File(...)):
         }
 
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e), "matches": []}

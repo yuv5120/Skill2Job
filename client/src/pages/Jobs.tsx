@@ -88,6 +88,8 @@ export default function Jobs() {
       formData.append("file", blob, "resume.pdf");
 
       const matchRes = await axios.post("http://localhost:8000/match-resume", formData);
+      console.log("Match response:", matchRes.data);
+      console.log("Matches:", matchRes.data.matches);
       setMatchedJobs(matchRes.data.matches || []);
       setShowMatched(true);
     } catch (error) {

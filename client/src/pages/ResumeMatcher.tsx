@@ -35,8 +35,8 @@ export default function ResumeMatcher() {
   return (
     <div className="min-h-screen bg-blue-50">
       <header className="bg-white shadow-md border-b border-gray-200">
-        <div className="max-w-4xl mx_auto px-4 sm:px-6 lg:px-8 py-4">
-          <button onClick={() => navigate("/dashboard")} className="flex items_center space-x-2 text_gray-600 hover:text-blue-600 transition">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <button onClick={() => navigate("/dashboard")} className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition">
             <ArrowLeft className="h-5 w-5" />
             <span className="font-medium">Back to Dashboard</span>
           </button>
@@ -46,7 +46,7 @@ export default function ResumeMatcher() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
           <div className="text-center mb-8">
-            <div className="inline-flex items_center justify_center h-20 w-20 rounded-2xl bg-blue-600 mb-4 shadow-lg">
+            <div className="inline-flex items-center justify-center h-20 w-20 rounded-2xl bg-blue-600 mb-4 shadow-lg">
               <Briefcase className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-blue-600 mb-2">Skill2Job</h1>
@@ -56,8 +56,8 @@ export default function ResumeMatcher() {
           <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-3">Select Resume File (PDF Only)</label>
             <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items_center justify_center w-full h-48 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all duration-300 hover:border-purple-400">
-                <div className="flex flex_col items-center justify_center pt-5 pb-6">
+              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all duration-300 hover:border-purple-400">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="h-12 w-12 text-gray-400 mb-3" />
                   <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
                   <p className="text-xs text-gray-500">PDF (MAX. 10MB)</p>
@@ -79,18 +79,18 @@ export default function ResumeMatcher() {
           )}
 
           <button onClick={handleMatch} disabled={loading || !file} className="w-full py-4 text-white font-semibold rounded-full bg-blue-600 hover:bg-blue-700 transition duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-            {loading ? (<span className="flex items_center justify_center"><svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>Finding Best Matches...</span>) : (<span className="flex items_center justify_center"><Sparkles className="h-5 w-5 mr-2" />Match Resume to Jobs</span>)}
+            {loading ? (<span className="flex items-center justify-center"><svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>Finding Best Matches...</span>) : (<span className="flex items-center justify-center"><Sparkles className="h-5 w-5 mr-2" />Match Resume to Jobs</span>)}
           </button>
 
           {matches.length > 0 && (
             <div className="mt-8">
-              <div className="flex items center space-x-3 mb-6">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 flex items_center justify_center">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">Top Job Matches</h3>
-                  <p className="text-sm text_gray-500">Found {matches.length} matching opportunities</p>
+                  <p className="text-sm text-gray-500">Found {matches.length} matching opportunities</p>
                 </div>
               </div>
 
@@ -108,9 +108,9 @@ export default function ResumeMatcher() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm text_gray-600 mb-3">
-                      <span className="flex items_center">📍 {match.job?.location || "Remote"}</span>
-                      {match.job?.salary && (<span className="flex items_center">💰 {match.job.salary}</span>)}
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
+                      <span className="flex items-center">📍 {match.job?.location || "Remote"}</span>
+                      {match.job?.salary && (<span className="flex items-center">💰 {match.job.salary}</span>)}
                     </div>
 
                     {match.job?.description && (<p className="text-sm text-gray-700 mb-3 line-clamp-2">{match.job.description}</p>)}

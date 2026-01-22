@@ -9,7 +9,12 @@ import prisma from "./prisma";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+  exposedHeaders: ['x-user-id'],
+  allowedHeaders: ['Content-Type', 'x-user-id', 'Authorization'],
+}));
 app.use(express.json());
 
 const storage = multer.memoryStorage();
@@ -140,8 +145,15 @@ app.get("/api/jobs", jobsLimiter, async (req, res) => {
 app.post("/api/upload-resume", upload.single("resume"), async (req, res) => {
   const file = req.file;
   const userId = req.headers["x-user-id"] as string | undefined;
-  if (!file) return res.status(400).send("No file uploaded");
-  if (!userId) return res.status(401).send("Unauthorized");
+  
+  console.log("Upload resume request:", {
+    hasFile: !!file,
+    userId: userId,
+    headers: req.headers,
+  });
+  
+  if (!file) return res.status(400).json({ error: "No file uploaded" });
+  if (!userId) return res.status(401).json({ error: "Unauthorized - missing x-user-id header" });
 
   try {
     const mlServiceUrl = process.env.ML_SERVICE_URL || "http://localhost:8000";

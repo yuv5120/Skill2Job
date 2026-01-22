@@ -61,8 +61,19 @@ async def parse_resume(file: UploadFile = File(...)):
                 pass
 
     try:
-        doc = fitz.open(stream=contents, filetype="pdf")
-        text = "\n".join([page.get_text() for page in doc])
+        # Try to parse as PDF first
+        text = ""
+        try:
+            doc = fitz.open(stream=contents, filetype="pdf")
+            text = "\n".join([page.get_text() for page in doc])
+        except:
+            # If PDF parsing fails, treat as plain text
+            pass
+        
+        # Fallback to plain text if PDF parsing failed
+        if not text or len(text.strip()) < 10:
+            text = contents.decode('utf-8', errors='ignore')
+        
         lines = text.splitlines()
 
         # === Extract Email ===

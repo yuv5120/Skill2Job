@@ -6,8 +6,7 @@
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["index.ts", "prisma.ts"],
   "exclude": ["node_modules", "dist", "__tests__"]

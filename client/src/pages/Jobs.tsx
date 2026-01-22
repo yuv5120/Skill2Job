@@ -47,7 +47,8 @@ export default function Jobs() {
         return;
       }
 
-      const response = await axios.get("http://localhost:5001/api/jobs", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const response = await axios.get(`${apiUrl}/api/jobs`, {
         params: query ? { q: query } : {},
       });
       setJobs(response.data);
@@ -69,7 +70,8 @@ export default function Jobs() {
       if (!user) return;
 
       setLoading(true);
-      const resumesRes = await axios.get("http://localhost:5001/api/my-resumes", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const resumesRes = await axios.get(`${apiUrl}/api/my-resumes`, {
         headers: { "x-user-id": user.uid },
       });
 

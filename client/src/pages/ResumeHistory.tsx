@@ -17,7 +17,8 @@ export default function ResumeHistory() {
       if (u) {
         setUser(u);
         try {
-          const res = await axios.get("http://localhost:5001/api/my-resumes", {
+          const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
+          const res = await axios.get(`${apiUrl}/api/my-resumes`, {
             headers: { "x-user-id": u.uid },
           });
           setResumes(res.data);

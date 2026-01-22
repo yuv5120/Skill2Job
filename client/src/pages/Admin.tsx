@@ -24,7 +24,8 @@ export default function Admin() {
 
   const fetchPostedJobs = async () => {
     try {
-      const response = await axios.get("http://localhost:5001/api/jobs");
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const response = await axios.get(`${apiUrl}/api/jobs`);
       setPostedJobs(response.data);
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -60,7 +61,7 @@ export default function Admin() {
       };
 
       await axios.post(
-        "http://localhost:5001/api/jobs",
+        `${import.meta.env.VITE_API_URL || "http://localhost:5001"}/api/jobs`,
         jobData,
         {
           headers: { "x-user-id": user.uid },

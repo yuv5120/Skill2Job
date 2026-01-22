@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
 
-const ResumeUploader = () => {
+const oader = () => {
   const [file, setFile] = useState<File | null>(null);
   const [parsed, setParsed] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,8 @@ const ResumeUploader = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:5001/api/upload-resume", formData, {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const res = await axios.post(`${apiUrl}/api/upload-resume`, formData, {
         headers: {
           "x-user-id": user.uid,
         },
@@ -145,4 +146,4 @@ const ResumeUploader = () => {
   );
 };
 
-export default ResumeUploader;
+export default oader;

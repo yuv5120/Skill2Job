@@ -157,15 +157,27 @@ app.post("/api/upload-resume", upload.single("resume"), async (req, res) => {
 
   try {
     const mlServiceUrl = process.env.ML_SERVICE_URL || "http://localhost:8000";
+    console.log("Calling ML service at:", mlServiceUrl);
+    
     const form = new FormData();
     form.append("file", file.buffer, {
       filename: file.originalname,
       contentType: file.mimetype,
     });
 
+    console.log("Sending to ML service:", {
+      url: `${mlServiceUrl}/parse-resume`,
+      filename: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    });
+
     const response = await axios.post(`${mlServiceUrl}/parse-resume`, form, {
       headers: form.getHeaders(),
+      timeout: 60000, // 60 second timeout for ML processing
     });
+
+    console.log("ML service response received:", response.status);
 
     const { name, email, skills, experience } = (response as any).data;
 
@@ -174,6 +186,8 @@ app.post("/api/upload-resume", upload.single("resume"), async (req, res) => {
 
     const cleanArray = (arr: any) => (Array.isArray(arr) ? arr.map((s) => cleanText(s)) : []);
 
+    console.log("Saving to database for user:", userId);
+    
     const saved = await prisma.resume.create({
       data: {
         userId,
@@ -184,10 +198,41 @@ app.post("/api/upload-resume", upload.single("resume"), async (req, res) => {
       },
     });
 
+    console.log("Resume saved successfully:", saved.id);
     res.json(saved);
   } catch (err: any) {
-    console.error("Parsing error:", err.message);
-    res.status(500).send("Error parsing resume");
+    console.error("Parsing error details:", {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status,
+      code: err.code,
+    });
+    
+    if (err.code === 'ECONNREFUSED') {
+      return res.status(503).json({ 
+        error: "ML service unavailable", 
+        message: "Cannot connect to resume parsing service. Please try again in a moment." 
+      });
+    }
+    
+    if (err.code === 'ETIMEDOUT' || err.code === 'ECONNABORTED') {
+      return res.status(504).json({ 
+        error: "ML service timeout", 
+        message: "Resume parsing is taking too long. The service may be starting up. Please try again." 
+      });
+    }
+    
+    if (err.response) {
+      return res.status(err.response.status).json({ 
+        error: "ML service error", 
+        message: err.response.data?.error || "Failed to parse resume" 
+      });
+    }
+    
+    res.status(500).json({ 
+      error: "Error parsing resume", 
+      message: err.message 
+    });
   }
 });
 

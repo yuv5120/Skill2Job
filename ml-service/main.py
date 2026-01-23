@@ -8,6 +8,10 @@ import redis
 import re
 import json
 import os
+import gc
+import sys
+import gc
+import sys
 
 # Initialize Redis and SpaCy
 redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
@@ -36,7 +40,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-nlp = spacy.load("en_core_web_md")
+
+# Load spaCy with memory optimization
+print("Loading spaCy model...")
+try:
+    nlp = spacy.load("en_core_web_md", disable=["parser", "ner"])  # Disable unused components
+    print(f"SpaCy model loaded successfully. Pipeline: {nlp.pipe_names}")
+except Exception as e:
+    print(f"FATAL: Error loading spaCy model: {e}")
+    sys.exit(1)
+    sys.exit(1)
 
 
 @app.get("/")
@@ -46,11 +59,12 @@ def home():
 
 @app.post("/parse-resume")
 async def parse_resume(file: UploadFile = File(...)):
-    import hashlib
-    import re
-
-    contents = await file.read()
-    file_hash = hashlib.md5(contents).hexdigest()
+    print(f"\\n==> Parsing resume: {file.filename}")
+    
+    try:
+        contents = await file.read()
+        file_hash = hashlib.md5(contents).hexdigest()
+        print(f"File hash: {file_hash}, size: {len(contents)} bytes")
 
     # Check cache if Redis is available
     if REDIS_AVAILABLE and r:
@@ -149,12 +163,23 @@ async def parse_resume(file: UploadFile = File(...)):
         if REDIS_AVAILABLE and r:
             try:
                 r.set(file_hash, json.dumps(result), ex=86400)
+                print("Result cached in Redis")
             except Exception as e:
                 print(f"Failed to cache result: {e}")
         
+        # Clean up memory
+        del contents
+        gc.collect()
+        
+        print(f"✓ Resume parsed successfully: {name}")
         return result
 
     except Exception as e:
+        print(f"ERROR parsing resume: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Clean up memory
+        gc.collect()
         return {"error": str(e)}
 
 @app.post("/match-resume")

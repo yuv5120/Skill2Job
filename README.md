@@ -13,6 +13,10 @@ A modern job matching platform powered by AI that helps users find jobs aligned 
 - **Firebase Authentication**: Secure login and registration with email/password.
 - **Resume History**: View and manage all uploaded resumes.
 
+## Links:
+- **Server** - https://skill2job-server.onrender.com
+- **ml-Service** - https://skill2job-ml-service.onrender.com
+
 ## Tech Stack
 
 ### Frontend

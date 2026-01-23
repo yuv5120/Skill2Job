@@ -66,20 +66,19 @@ async def parse_resume(file: UploadFile = File(...)):
         file_hash = hashlib.md5(contents).hexdigest()
         print(f"File hash: {file_hash}, size: {len(contents)} bytes")
 
-    # Check cache if Redis is available
-    if REDIS_AVAILABLE and r:
-        try:
-            cached = r.get(file_hash)
-            if cached:
-                return json.loads(cached)
-        except Exception:
-            # Fallback if cache is corrupted
+        # Check cache if Redis is available
+        if REDIS_AVAILABLE and r:
             try:
-                r.delete(file_hash)
-            except:
-                pass
+                cached = r.get(file_hash)
+                if cached:
+                    return json.loads(cached)
+            except Exception:
+                # Fallback if cache is corrupted
+                try:
+                    r.delete(file_hash)
+                except:
+                    pass
 
-    try:
         # Try to parse as PDF first
         text = ""
         try:

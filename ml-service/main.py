@@ -22,13 +22,18 @@ except Exception as e:
 
 app = FastAPI()
 
-# Enable CORS for local dev client
+# Enable CORS for all origins (frontend on Vercel, backend on Render)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "https://skill2-job.vercel.app",
+        "https://skill2job-server.onrender.com",
+        "*"  # Allow all origins for now
+    ],
     allow_credentials=True,
-    allow_methods=["*"]
-    ,
+    allow_methods=["*"],
     allow_headers=["*"]
 )
 nlp = spacy.load("en_core_web_md")

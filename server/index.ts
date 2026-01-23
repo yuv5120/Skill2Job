@@ -9,6 +9,10 @@ import prisma from "./prisma";
 dotenv.config();
 
 const app = express();
+
+// Trust proxy - required for Render deployment behind Cloudflare
+app.set('trust proxy', 1);
+
 app.use(cors({
   origin: true,
   credentials: true,
